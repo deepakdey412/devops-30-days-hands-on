@@ -764,8 +764,8 @@ sudo !!
 watch -n 1 'ss -tulnp'
 ```
 
+_These commands cover ~90% of what a DevOps engineer needs day-to-day. The other 10% you'll find in man pages: `man command` or `command --help`._
+
 ---
 
-## _These commands cover ~90% of what a DevOps engineer needs day-to-day. The other 10% you'll find in man pages: `man command` or `command --help`._
-
-⭐ **Star this repo** · 👨‍💻 **Follow** → [github.com/deepak412](https://github.com/deepak412) · More DevOps guides dropping regularly.
+⭐ **Star this repo** · 👨‍💻 **Follow** → [github.com/deepak412](https://github.com/deepakdey412) · More DevOps guides dropping regularly.
