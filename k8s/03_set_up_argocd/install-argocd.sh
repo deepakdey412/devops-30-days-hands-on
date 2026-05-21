@@ -2,31 +2,23 @@
 
 set -e
 
-echo "📦 Creating argocd namespace..."
+echo "🚀 Creating namespace..."
 kubectl create namespace argocd || true
 
 echo "🚀 Installing Argo CD..."
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-echo "⏳ Waiting for Argo CD pods to be ready..."
-kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s || true
+echo "⏳ Waiting for pods to be ready..."
+kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
 
-echo "📊 Checking pods..."
-kubectl get pods -n argocd
-
-echo "🌐 Exposing Argo CD server (LoadBalancer)..."
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-
-echo "📡 Services:"
-kubectl get svc -n argocd
+echo "🌐 Exposing Argo CD Server (NodePort)..."
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "NodePort"}}'
 
 echo "🔑 Fetching admin password..."
-echo "--------------------------------------"
-kubectl -n argocd get secret argocd-initial-admin-secret \
--o jsonpath="{.data.password}" | base64 -d
+echo "Username: admin"
+echo -n "Password: "
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 echo ""
-echo "--------------------------------------"
 
-echo "✔ Argo CD installation completed!"
-echo "👉 Username: admin"
-echo "👉 Password: (above)"
+echo "✅ Argo CD installed successfully!"
+echo "👉 Run: kubectl get svc -n argocd"
