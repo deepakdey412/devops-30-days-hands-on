@@ -1,0 +1,2 @@
+terraform.tfstate.backup -> this file will crate after tf destroy cmd
+
