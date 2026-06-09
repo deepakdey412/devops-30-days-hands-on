@@ -3,6 +3,7 @@ public class Demo {
         System.out.println("Hello Deepak");
         display();
         display();
+        display();
     }
 
     public static void display() {
