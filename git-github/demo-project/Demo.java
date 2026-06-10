@@ -4,6 +4,7 @@ public class Demo {
         display();
         display();
         display();
+        display();
     }
 
     public static void display() {
