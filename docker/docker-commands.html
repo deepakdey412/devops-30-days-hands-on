@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Essential Docker Commands for DevOps Engineers</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --blue: #2f81f7;
+    --blue-dim: #1f6feb;
+    --cyan: #39d0d8;
+    --green: #3fb950;
+    --orange: #f0883e;
+    --purple: #bc8cff;
+    --red: #f85149;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --whale: #1d63ed;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar TOC ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 24px 0;
+  }
+
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0 20px 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .toc-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    transition: all .15s;
+    border-left: 3px solid transparent;
+  }
+  .toc-link:hover {
+    color: var(--text);
+    background: var(--surface2);
+    border-left-color: var(--blue);
+  }
+  .toc-link .icon { font-size: 16px; flex-shrink: 0; }
+
+  /* ── Main content ── */
+  .main { flex: 1; min-width: 0; padding: 40px 48px 80px; max-width: 1060px; }
+
+  /* ── Header ── */
+  .hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .whale-icon { font-size: 52px; }
+  .hero h1 { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .hero p { color: var(--text-muted); margin-top: 4px; font-size: 14px; }
+
+  /* ── Section headings ── */
+  .section {
+    margin-bottom: 52px;
+    scroll-margin-top: 24px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .badge {
+    font-size: 20px;
+  }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--surface2); }
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 9px 14px; vertical-align: top; }
+  td:first-child { width: 38%; }
+  td:nth-child(2) { width: 20%; color: var(--text-muted); }
+
+  code {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    background: rgba(110,118,129,.15);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--cyan);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── Code blocks ── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .code-block-title {
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: monospace;
+  }
+  pre {
+    padding: 16px;
+    overflow-x: auto;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  pre .comment { color: var(--text-muted); }
+  pre .cmd { color: var(--cyan); }
+  pre .flag { color: var(--orange); }
+  pre .arg { color: var(--green); }
+
+  /* ── Scenario cards ── */
+  .scenarios { display: grid; gap: 20px; }
+  .scenario-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .scenario-title {
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .scenario-num {
+    background: var(--blue-dim);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <div class="sidebar-title">📑 Table of Contents</div>
+    <a class="toc-link" href="#container-management"><span class="icon">🐳</span> Container Management</a>
+    <a class="toc-link" href="#logs-inspection"><span class="icon">📖</span> Logs &amp; Inspection</a>
+    <a class="toc-link" href="#container-interaction"><span class="icon">🔍</span> Container Interaction</a>
+    <a class="toc-link" href="#image-management"><span class="icon">🏗️</span> Image Management</a>
+    <a class="toc-link" href="#volume-management"><span class="icon">📦</span> Volume Management</a>
+    <a class="toc-link" href="#network-management"><span class="icon">🌐</span> Network Management</a>
+    <a class="toc-link" href="#docker-compose"><span class="icon">🔧</span> Docker Compose</a>
+    <a class="toc-link" href="#cleanup"><span class="icon">🧹</span> Cleanup &amp; Maintenance</a>
+    <a class="toc-link" href="#troubleshooting"><span class="icon">🚀</span> Troubleshooting</a>
+  </nav>
+
+  <!-- ── Main ── -->
+  <main class="main">
+
+    <div class="hero">
+      <div class="whale-icon">🐳</div>
+      <div>
+        <h1>Essential Docker Commands</h1>
+        <p>Daily reference for DevOps Engineers — containers, images, volumes, networks &amp; more</p>
+      </div>
+    </div>
+
+    <!-- Container Management -->
+    <section class="section" id="container-management">
+      <div class="section-header">
+        <span class="badge">🐳</span>
+        <h2>Container Management</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker run image</code></td><td>Create &amp; start container</td><td><code>docker run -d nginx:latest</code> → Start nginx detached</td></tr>
+            <tr><td><code>docker run -d image</code></td><td>Run detached (background)</td><td><code>docker run -d --name app python:3.11</code> → Background app</td></tr>
+            <tr><td><code>docker run --name name image</code></td><td>Named container</td><td><code>docker run --name webserver nginx</code> → Easy to reference</td></tr>
+            <tr><td><code>docker start container</code></td><td>Start existing container</td><td><code>docker start webserver</code> → Restart stopped container</td></tr>
+            <tr><td><code>docker stop container</code></td><td>Stop container (SIGTERM)</td><td><code>docker stop webserver</code> → Graceful stop</td></tr>
+            <tr><td><code>docker stop -t 30 container</code></td><td>Stop with timeout</td><td><code>docker stop -t 30 app</code> → 30s timeout before kill</td></tr>
+            <tr><td><code>docker restart container</code></td><td>Restart container</td><td><code>docker restart webserver</code> → Quick restart after failure</td></tr>
+            <tr><td><code>docker kill container</code></td><td>Force kill (SIGKILL)</td><td><code>docker kill app</code> → Immediate stop</td></tr>
+            <tr><td><code>docker rm container</code></td><td>Remove container</td><td><code>docker rm old_app</code> → Delete stopped container</td></tr>
+            <tr><td><code>docker rm -f container</code></td><td>Force remove running</td><td><code>docker rm -f broken_app</code> → Kill + remove</td></tr>
+            <tr><td><code>docker ps</code></td><td>List running containers</td><td><code>docker ps</code> → See what's running</td></tr>
+            <tr><td><code>docker ps -a</code></td><td>List all containers</td><td><code>docker ps -a</code> → Include stopped/exited</td></tr>
+            <tr><td><code>docker ps -q</code></td><td>List only IDs</td><td><code>docker ps -q</code> → Get IDs for scripts</td></tr>
+            <tr><td><code>docker ps --filter "status=exited"</code></td><td>Filter by status</td><td>Find dead containers</td></tr>
+            <tr><td><code>docker ps --format "table {{.Name}} {{.Status}}"</code></td><td>Custom output</td><td>Clean formatted view</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Logs & Inspection -->
+    <section class="section" id="logs-inspection">
+      <div class="section-header">
+        <span class="badge">📖</span>
+        <h2>Container Logs and Inspection</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker logs container</code></td><td>Show container logs</td><td><code>docker logs app</code> → See application output</td></tr>
+            <tr><td><code>docker logs -f container</code></td><td>Follow logs live</td><td><code>docker logs -f app</code> → Monitor in real-time</td></tr>
+            <tr><td><code>docker logs --tail 100 container</code></td><td>Last N lines</td><td><code>docker logs --tail 500 app</code> → Recent errors only</td></tr>
+            <tr><td><code>docker logs -t container</code></td><td>Show timestamps</td><td><code>docker logs -t app</code> → See when errors occurred</td></tr>
+            <tr><td><code>docker inspect container</code></td><td>Detailed info</td><td><code>docker inspect app</code> → Get IP, config, env vars</td></tr>
+            <tr><td><code>docker inspect -f "{{.State.IP}}" container</code></td><td>Extract field</td><td>Get container IP</td></tr>
+            <tr><td><code>docker inspect -f "{{.Config.Env}}" container</code></td><td>Show environment</td><td>Check env vars</td></tr>
+            <tr><td><code>docker top container</code></td><td>Show processes inside</td><td><code>docker top app</code> → See running processes</td></tr>
+            <tr><td><code>docker stats container</code></td><td>Live resource usage</td><td><code>docker stats app</code> → CPU/memory real-time</td></tr>
+            <tr><td><code>docker stats --no-stream</code></td><td>One-time stats</td><td>Quick resource snapshot</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Container Interaction -->
+    <section class="section" id="container-interaction">
+      <div class="section-header">
+        <span class="badge">🔍</span>
+        <h2>Container Interaction</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker exec container cmd</code></td><td>Run command inside</td><td><code>docker exec app python test.py</code> → Run script</td></tr>
+            <tr><td><code>docker exec -it container cmd</code></td><td>Interactive mode</td><td><code>docker exec -it app bash</code> → Enter shell</td></tr>
+            <tr><td><code>docker exec -d container cmd</code></td><td>Detached exec</td><td><code>docker exec -d app backup.sh</code> → Background task</td></tr>
+            <tr><td><code>docker attach container</code></td><td>Attach stdin/stdout</td><td><code>docker attach app</code> → Connect to process</td></tr>
+            <tr><td><code>docker cp src dest</code></td><td>Copy files to container</td><td><code>docker cp config.yaml app:/etc/</code> → Add config</td></tr>
+            <tr><td><code>docker cp container:src local</code></td><td>Copy from container</td><td><code>docker cp app:/var/log/app.log .</code> → Get logs out</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Image Management -->
+    <section class="section" id="image-management">
+      <div class="section-header">
+        <span class="badge">🏗️</span>
+        <h2>Image Management</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker images</code></td><td>List all images</td><td>See downloaded images</td></tr>
+            <tr><td><code>docker images -q</code></td><td>List only IDs</td><td>Get IDs for cleanup scripts</td></tr>
+            <tr><td><code>docker pull image</code></td><td>Download image</td><td><code>docker pull nginx:1.25</code> → Get specific version</td></tr>
+            <tr><td><code>docker pull -q image</code></td><td>Quiet pull</td><td>Less verbose output</td></tr>
+            <tr><td><code>docker build -t name .</code></td><td>Build from Dockerfile</td><td><code>docker build -t myapp .</code> → Create app image</td></tr>
+            <tr><td><code>docker build -t name:tag .</code></td><td>Build with tag</td><td><code>docker build -t myapp:v1.2 .</code> → Version your image</td></tr>
+            <tr><td><code>docker build --no-cache .</code></td><td>Build without cache</td><td>Force fresh build</td></tr>
+            <tr><td><code>docker push image</code></td><td>Upload to registry</td><td><code>docker push myapp:v1</code> → Deploy to Docker Hub</td></tr>
+            <tr><td><code>docker tag src dst</code></td><td>Tag image</td><td>Rename for registry push</td></tr>
+            <tr><td><code>docker rmi image</code></td><td>Remove image</td><td><code>docker rmi nginx:old</code> → Delete old image</td></tr>
+            <tr><td><code>docker rmi -f image</code></td><td>Force remove</td><td>Remove even if in use</td></tr>
+            <tr><td><code>docker image prune</code></td><td>Remove dangling images</td><td>Clean unused layers</td></tr>
+            <tr><td><code>docker image prune -a</code></td><td>Remove all unused</td><td>Full image cleanup</td></tr>
+            <tr><td><code>docker history image</code></td><td>Show image layers</td><td>See build steps</td></tr>
+            <tr><td><code>docker save -o file image</code></td><td>Save image to file</td><td>Offline / airgap transfer</td></tr>
+            <tr><td><code>docker load -i file</code></td><td>Load image from file</td><td>Restore from backup</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Volume Management -->
+    <section class="section" id="volume-management">
+      <div class="section-header">
+        <span class="badge">📦</span>
+        <h2>Volume Management</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker volume create name</code></td><td>Create volume</td><td><code>docker volume create db_data</code> → Persistent storage</td></tr>
+            <tr><td><code>docker volume ls</code></td><td>List volumes</td><td>See all volumes</td></tr>
+            <tr><td><code>docker volume rm name</code></td><td>Remove volume</td><td><code>docker volume rm old_data</code> → Delete unused</td></tr>
+            <tr><td><code>docker volume inspect name</code></td><td>Volume details</td><td>Get mount path</td></tr>
+            <tr><td><code>docker run -v vol:path image</code></td><td>Mount volume</td><td><code>docker run -v db_data:/var/lib/mysql mysql</code></td></tr>
+            <tr><td><code>docker run -v path:path image</code></td><td>Bind mount</td><td><code>docker run -v ./config:/etc app</code> → Local config</td></tr>
+            <tr><td><code>docker run --mount type=volume,src=vol,dst=path image</code></td><td>Modern mount syntax</td><td>Explicit, recommended</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Network Management -->
+    <section class="section" id="network-management">
+      <div class="section-header">
+        <span class="badge">🌐</span>
+        <h2>Network Management</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker network ls</code></td><td>List networks</td><td>See custom networks</td></tr>
+            <tr><td><code>docker network create name</code></td><td>Create network</td><td><code>docker network create backend</code> → Isolate services</td></tr>
+            <tr><td><code>docker network rm name</code></td><td>Remove network</td><td>Delete unused network</td></tr>
+            <tr><td><code>docker network inspect name</code></td><td>Network details</td><td>See connected containers</td></tr>
+            <tr><td><code>docker run --network name image</code></td><td>Connect to network</td><td><code>docker run --network backend app</code></td></tr>
+            <tr><td><code>docker run -p host:container image</code></td><td>Port mapping</td><td><code>docker run -p 8080:80 nginx</code> → Access via 8080</td></tr>
+            <tr><td><code>docker run -p 127.0.0.1:8080:80 image</code></td><td>Local-only port</td><td>Secure, localhost-only binding</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Docker Compose -->
+    <section class="section" id="docker-compose">
+      <div class="section-header">
+        <span class="badge">🔧</span>
+        <h2>Docker Compose</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker-compose up</code></td><td>Start all services</td><td>Launch the full stack</td></tr>
+            <tr><td><code>docker-compose up -d</code></td><td>Start detached</td><td>Background services</td></tr>
+            <tr><td><code>docker-compose up --build</code></td><td>Build + start</td><td>Rebuild images on startup</td></tr>
+            <tr><td><code>docker-compose down</code></td><td>Stop all services</td><td>Clean shutdown</td></tr>
+            <tr><td><code>docker-compose down -v</code></td><td>Stop + remove volumes</td><td>Full reset</td></tr>
+            <tr><td><code>docker-compose restart</code></td><td>Restart services</td><td><code>docker-compose restart app</code></td></tr>
+            <tr><td><code>docker-compose ps</code></td><td>List compose services</td><td>See running stack</td></tr>
+            <tr><td><code>docker-compose logs</code></td><td>Show all logs</td><td>View entire stack output</td></tr>
+            <tr><td><code>docker-compose logs -f app</code></td><td>Follow specific service</td><td>Monitor one service</td></tr>
+            <tr><td><code>docker-compose exec app cmd</code></td><td>Run in service</td><td><code>docker-compose exec app bash</code></td></tr>
+            <tr><td><code>docker-compose build</code></td><td>Build only</td><td>Pre-build images</td></tr>
+            <tr><td><code>docker-compose config</code></td><td>Show config</td><td>Verify compose YAML</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Cleanup -->
+    <section class="section" id="cleanup">
+      <div class="section-header">
+        <span class="badge">🧹</span>
+        <h2>Cleanup and Maintenance</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Command</th><th>Use</th><th>Real-Life Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>docker system prune</code></td><td>Remove unused data</td><td>Clean stopped containers, networks, dangling images</td></tr>
+            <tr><td><code>docker system prune -a</code></td><td>Aggressive cleanup</td><td>Remove ALL unused resources</td></tr>
+            <tr><td><code>docker container prune</code></td><td>Remove stopped containers</td><td>Cleanup exited containers</td></tr>
+            <tr><td><code>docker volume prune</code></td><td>Remove unused volumes</td><td>Delete orphan volumes</td></tr>
+            <tr><td><code>docker info</code></td><td>System info</td><td>Check disk usage, version, runtime</td></tr>
+            <tr><td><code>docker version</code></td><td>Docker version</td><td>Verify installation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Troubleshooting -->
+    <section class="section" id="troubleshooting">
+      <div class="section-header">
+        <span class="badge">🚀</span>
+        <h2>Real-Life Troubleshooting Scenarios</h2>
+      </div>
+      <div class="scenarios">
+
+        <div class="scenario-card">
+          <div class="scenario-title"><span class="scenario-num">01</span> Container won't start</div>
+          <div class="code-block">
+            <pre><span class="comment"># Find dead containers</span>
+<span class="cmd">docker ps -a</span> <span class="flag">--filter</span> <span class="arg">"status=exited"</span>
+
+<span class="comment"># Check error reason</span>
+<span class="cmd">docker inspect</span> broken_container
+
+<span class="comment"># See last 50 log lines</span>
+<span class="cmd">docker logs</span> broken_container <span class="flag">--tail</span> <span class="arg">50</span></pre>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-title"><span class="scenario-num">02</span> High CPU usage</div>
+          <div class="code-block">
+            <pre><span class="comment"># Live CPU/memory for all containers</span>
+<span class="cmd">docker stats</span>
+
+<span class="comment"># One-time snapshot</span>
+<span class="cmd">docker stats</span> <span class="flag">--no-stream</span> app
+
+<span class="comment"># Processes inside container</span>
+<span class="cmd">docker top</span> app</pre>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-title"><span class="scenario-num">03</span> Disk full</div>
+          <div class="code-block">
+            <pre><span class="comment"># Clean everything unused</span>
+<span class="cmd">docker system prune</span> <span class="flag">-a</span>
+
+<span class="comment"># Remove all images</span>
+<span class="cmd">docker images -q</span> | xargs <span class="cmd">docker rmi</span>
+
+<span class="comment"># Remove orphan volumes</span>
+<span class="cmd">docker volume prune</span></pre>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-title"><span class="scenario-num">04</span> Port conflict</div>
+          <div class="code-block">
+            <pre><span class="comment"># Find containers using host network</span>
+<span class="cmd">docker ps</span> <span class="flag">--filter</span> <span class="arg">"network=host"</span>
+
+<span class="comment"># Get container IP address</span>
+<span class="cmd">docker inspect</span> app <span class="flag">--format</span> <span class="arg">'{{.NetworkSettings.IPAddress}}'</span></pre>
+          </div>
+        </div>
+
+        <div class="scenario-card">
+          <div class="scenario-title"><span class="scenario-num">05</span> Deploy to production</div>
+          <div class="code-block">
+            <pre><span class="comment"># Build with version tag</span>
+<span class="cmd">docker build</span> <span class="flag">-t</span> <span class="arg">myapp:v1.2</span> .
+
+<span class="comment"># Tag for registry</span>
+<span class="cmd">docker tag</span> myapp:v1.2 registry.com/myapp:v1.2
+
+<span class="comment"># Push to registry</span>
+<span class="cmd">docker push</span> registry.com/myapp:v1.2
+
+<span class="comment"># Deploy</span>
+<span class="cmd">docker run</span> <span class="flag">-d --name</span> app <span class="flag">-p</span> <span class="arg">8080:80</span> registry.com/myapp:v1.2</pre>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Smooth scroll for all anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  // Highlight active TOC link on scroll
+  const sections = document.querySelectorAll('.section');
+  const tocLinks = document.querySelectorAll('.toc-link');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(l => l.style.borderLeftColor = '');
+        const active = document.querySelector(`.toc-link[href="#${entry.target.id}"]`);
+        if (active) {
+          active.style.borderLeftColor = '#2f81f7';
+          active.style.color = '#e6edf3';
+        }
+      }
+    });
+  }, { threshold: 0.25 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
